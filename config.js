@@ -1,6 +1,6 @@
-<script>
-  window.ENV = {
-    SUPABASE_URL: "https://jnlpnfzlluapizecuhnh.supabase.co",
-    SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpubHBuZnpsbHVhcGl6ZWN1aG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NDE1ODYsImV4cCI6MjA3MDUxNzU4Nn0.SYadrmr3aFjVM_du3Ds0rK_d0H6r81Ma5ygdKbHYgec"
-  };
-</script>
+
+  window.SUPABASE_URL = "https://jnlpnfzlluapizecuhnh.supabase.co";
+  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpubHBuZnpsbHVhcGl6ZWN1aG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NDE1ODYsImV4cCI6MjA3MDUxNzU4Nn0.SYadrmr3aFjVM_du3Ds0rK_d0H6r81Ma5ygdKbHYgec";
+
+
+
