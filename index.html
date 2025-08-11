@@ -1,858 +1,954 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-  <title>Bar Control • PWA</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#111111"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Control Bar / Discoteca · PWA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root { --pad: 14px; }
-    body { background:#f7f7f8; }
-    .app { max-width: 1080px; margin: 0 auto; padding: var(--pad); }
-    .tile { padding: 16px; border-radius: 16px; border:1px solid #eee; background:#fff; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
-    .btn-fat { padding: 14px 16px; font-size: 18px; border-radius: 14px; }
-    .kpi { border-radius: 14px; padding: 10px 12px; background:#fff; border: 1px solid #eee; }
-    .kpi .v { font-weight:700; font-size: 18px; }
-    .pos-pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; background:#111; color:#fff; }
-    .pos-Barra { background: #0d6efd; }
-    .pos-Granizados { background: #198754; }
-    .table-sm td, .table-sm th { padding: .45rem .5rem; }
-    .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; padding: 8px 12px; z-index: 1000; }
+    body{background:#f5f8fb}
+    .tile{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem}
+    .btn-soft{background:#0d6efd14;border:1px solid #0d6efd22}
+    .kpi{min-width:210px}
+    .sticky-footer{position:fixed;bottom:6px;left:0;right:0;text-align:center;color:#64748b;font-size:.85rem}
+    .cursor{cursor:pointer}
+    .hidden{display:none !important}
+    .table-sm td,.table-sm th{padding:.4rem .5rem}
+    .badge-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.5rem}
   </style>
 </head>
-<body>
-<div class="app">
-  <header class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="m-0">Control Bar / Discoteca · PWA</h4>
-    <div class="d-flex gap-2">
-      <button id="btnExportXLSX" class="btn btn-sm btn-outline-primary">Excel</button>
-      <button id="btnExportPDF" class="btn btn-sm btn-outline-danger">PDF</button>
-      <button id="btnReset" class="btn btn-sm btn-outline-secondary">Reset</button>
-    </div>
-  </header>
 
-  <!-- HOME ROLES -->
-  <section id="home" class="tile">
-    <div class="mb-3">
-      <label class="form-label">Soy:</label>
-      <div class="row g-2">
-        <div class="col-12 col-md-4"><button class="w-100 btn btn-dark btn-fat" data-goto="mesero">Mesero (Ventas Rápidas)</button></div>
-        <div class="col-12 col-md-4"><button class="w-100 btn btn-dark btn-fat" data-goto="pos">Barra / Granizados (Inventario · Compras · Gastos)</button></div>
-        <div class="col-12 col-md-4"><button class="w-100 btn btn-dark btn-fat" data-goto="socios">Socios (KPIs · Cierres · Distribución)</button></div>
+<body>
+<div class="container py-4">
+
+  <!-- Header: Fecha activa y acciones -->
+  <div class="tile mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <div class="me-3">
+        <div class="text-secondary small">Fecha activa</div>
+        <input id="fechaActiva" type="date" class="form-control" style="min-width:190px">
+        <div class="small text-muted mt-1">Todo lo que agregues se guardará con esta fecha. Puedes cambiarla para editar días pasados.</div>
+      </div>
+
+      <div class="ms-auto d-flex gap-2">
+        <button id="btnExportXLSX" class="btn btn-outline-primary btn-sm">Excel</button>
+        <button id="btnExportPDF" class="btn btn-outline-danger btn-sm">PDF</button>
+        <button id="btnReset" class="btn btn-outline-secondary btn-sm">Reset</button>
       </div>
     </div>
-    <div class="row g-2">
-      <div class="col-6 col-md-3"><div class="kpi"><div class="t text-muted">Ventas hoy</div><div class="v" id="kpiVentas">$0</div></div></div>
-      <div class="col-6 col-md-3"><div class="kpi"><div class="t text-muted">Efectivo</div><div class="v" id="kpiEfec">$0</div></div></div>
-      <div class="col-6 col-md-3"><div class="kpi"><div class="t text-muted">Transf.</div><div class="v" id="kpiTransf">$0</div></div></div>
-      <div class="col-6 col-md-3"><div class="kpi"><div class="t text-muted">Utilidad hoy</div><div class="v" id="kpiUtil">$0</div></div></div>
+  </div>
+
+  <!-- Navegación -->
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <button class="btn btn-soft" data-goto="home">Inicio</button>
+    <button class="btn btn-soft" data-goto="ventas">Mesero (Ventas Rápidas)</button>
+    <button class="btn btn-soft" data-goto="barra">Barra / Granizados (Compras · Inventario · Gastos · Nómina)</button>
+    <button class="btn btn-soft" data-goto="socios">Socios (KPIs · Cierres · Distribución)</button>
+    <button class="btn btn-soft" data-goto="historial">Historial</button>
+    <button class="btn btn-soft" data-goto="cierres">Cierres</button>
+  </div>
+
+  <!-- ====================== HOME ====================== -->
+  <section id="view_home" class="tile">
+    <h6 class="mb-3">KPIs rápida (día)</h6>
+    <div class="d-flex flex-wrap gap-3">
+      <div class="tile kpi">
+        <div class="text-secondary small">Ventas</div>
+        <div class="fs-5 fw-semibold" id="kpiVentas">$ 0</div>
+      </div>
+      <div class="tile kpi">
+        <div class="text-secondary small">Efectivo</div>
+        <div class="fs-5 fw-semibold" id="kpiEfectivo">$ 0</div>
+      </div>
+      <div class="tile kpi">
+        <div class="text-secondary small">Transf.</div>
+        <div class="fs-5 fw-semibold" id="kpiTransf">$ 0</div>
+      </div>
+      <div class="tile kpi">
+        <div class="text-secondary small">Gastos</div>
+        <div class="fs-5 fw-semibold" id="kpiGastos">$ 0</div>
+      </div>
+      <div class="tile kpi">
+        <div class="text-secondary small">Compras</div>
+        <div class="fs-5 fw-semibold" id="kpiCompras">$ 0</div>
+      </div>
+      <div class="tile kpi">
+        <div class="text-secondary small">Nómina</div>
+        <div class="fs-5 fw-semibold" id="kpiNomina">$ 0</div>
+      </div>
+      <div class="tile kpi bg-success-subtle">
+        <div class="text-secondary small">Utilidad hoy (aprox)</div>
+        <div class="fs-5 fw-semibold" id="kpiUtilidad">$ 0</div>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <div>
+      <h6 class="mb-3">Resumen de deudas</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="tile">
+            <div class="fw-medium mb-2">Empleados (descuadres)</div>
+            <ul id="listaDeudasEmpleados" class="list-group list-group-flush small"></ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="tile">
+            <div class="fw-medium mb-2">Socios (descuentos / cargos)</div>
+            <ul id="listaDeudasSocios" class="list-group list-group-flush small"></ul>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- MESERO -->
-  <section id="mesero" class="tile mt-3" hidden>
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="m-0">Ventas rápidas (Mesero)</h5>
-      <button class="btn btn-sm btn-outline-secondary" data-goto="home">Volver</button>
+  <!-- ====================== VENTAS ====================== -->
+  <section id="view_ventas" class="tile hidden">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="mb-0">Ventas rápidas (Mesero)</h6>
+      <button class="btn btn-outline-secondary btn-sm" data-goto="home">Volver</button>
     </div>
-    <div class="row g-2 mt-2">
-      <div class="col-6">
+
+    <div class="row g-3">
+      <div class="col-md-3">
         <label class="form-label">POS</label>
-        <select id="ventaPOS" class="form-select form-select-lg">
-          <option>Barra</option><option>Granizados</option>
+        <select id="v_pos" class="form-select">
+          <option>Barra</option>
+          <option>Granizados</option>
         </select>
       </div>
-      <div class="col-6">
+      <div class="col-md-5">
         <label class="form-label">Producto</label>
-        <select id="ventaSku" class="form-select form-select-lg"></select>
+        <div class="input-group">
+          <select id="v_sku" class="form-select"></select>
+          <button id="btnCargarCatalogo" class="btn btn-outline-primary">Cargar catálogo POS</button>
+        </div>
+        <div class="form-text">Puedes editar el catálogo en “Barra / Granizados”.</div>
       </div>
-      <div class="col-4">
+      <div class="col-md-2">
         <label class="form-label">Cant.</label>
-        <input id="ventaCant" type="number" class="form-control form-control-lg" min="1" value="1"/>
+        <input id="v_cant" type="number" min="1" value="1" class="form-control">
       </div>
-      <div class="col-4">
+      <div class="col-md-2">
+        <label class="form-label">Precio unit.</label>
+        <input id="v_pu" type="number" min="0" step="100" value="0" class="form-control">
+      </div>
+
+      <div class="col-md-3">
         <label class="form-label">Pago</label>
-        <select id="ventaPago" class="form-select form-select-lg"><option>Efectivo</option><option>Transferencia</option></select>
+        <select id="v_pago" class="form-select">
+          <option value="Efectivo">Efectivo</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="Mixto">Efectivo + Transferencia</option>
+        </select>
       </div>
-      <div class="col-4">
+      <div class="col-md-2 v_mixto hidden">
+        <label class="form-label">$ Efectivo</label>
+        <input id="v_efectivo" type="number" min="0" step="100" value="0" class="form-control">
+      </div>
+      <div class="col-md-2 v_mixto hidden">
+        <label class="form-label">$ Transf.</label>
+        <input id="v_transf" type="number" min="0" step="100" value="0" class="form-control">
+      </div>
+      <div class="col-md-5">
         <label class="form-label">Notas</label>
-        <input id="ventaNotas" class="form-control form-control-lg" placeholder="Ej: Mesa 4 / promo"/>
+        <input id="v_notas" type="text" class="form-control" placeholder="Ej: Mesa 4 / promo">
       </div>
-      <div class="col-6">
-        <label class="form-label">Desc. socio</label>
-        <input id="ventaDescSoc" type="number" min="0" class="form-control form-control-lg" value="0"/>
-      </div>
-      <div class="col-6">
-        <label class="form-label">Descuadre</label>
-        <input id="ventaDescuadre" type="number" min="0" class="form-control form-control-lg" value="0"/>
-      </div>
-      <div class="col-12 d-grid mt-2">
-        <button id="btnAddVenta" class="btn btn-success btn-fat">Agregar venta</button>
+      <div class="col-12">
+        <button id="btnAddVenta" class="btn btn-success w-100">Agregar venta</button>
       </div>
     </div>
 
-    <div class="table-responsive mt-3">
-      <table class="table table-sm align-middle" id="tblVentas">
-        <thead><tr><th>Fecha</th><th>Hora</th><th>POS</th><th>SKU</th><th>Prod</th><th>Cant</th><th>Pago</th><th>Desc</th><th>Descuadre</th><th>Total</th><th>Notas</th><th></th></tr></thead>
-        <tbody></tbody>
+    <div class="table-responsive mt-4">
+      <table class="table table-sm align-middle">
+        <thead><tr>
+          <th>Fecha</th><th>Hora</th><th>POS</th><th>SKU</th><th>Prod</th><th>Cant</th>
+          <th>Pago</th><th>Total</th><th>Notas</th><th></th>
+        </tr></thead>
+        <tbody id="tblVentas"></tbody>
       </table>
     </div>
   </section>
 
-  <!-- POS (Barra/Granizados) -->
-  <section id="pos" class="tile mt-3" hidden>
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="m-0">Barra / Granizados (Inventarios · Compras · Gastos)</h5>
-      <button class="btn btn-sm btn-outline-secondary" data-goto="home">Volver</button>
+  <!-- ====================== BARRA / GRANIZADOS ====================== -->
+  <section id="view_barra" class="tile hidden">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="mb-0">Barra / Granizados</h6>
+      <button class="btn btn-outline-secondary btn-sm" data-goto="home">Volver</button>
     </div>
 
-    <div class="row g-3 mt-2">
-      <div class="col-12 col-lg-6">
-        <div class="tile">
-          <h6>Inventario del día</h6>
-          <div class="row g-2">
-            <div class="col-6">
+    <div class="row g-3">
+      <!-- Inventario -->
+      <div class="col-xl-6">
+        <div class="tile mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">Inventario del día</div>
+            <div style="max-width:220px" class="d-flex gap-2">
+              <select id="inv_pos" class="form-select form-select-sm">
+                <option>Barra</option><option>Granizados</option>
+              </select>
+              <button id="btnInvCargar" class="btn btn-outline-primary btn-sm">Cargar catálogo POS</button>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div class="fw-medium">Contar stock inicial (editar cantidades)</div>
+            <div class="table-responsive" style="max-height:280px;overflow:auto">
+              <table class="table table-sm">
+                <thead><tr><th>SKU</th><th>Producto</th><th class="text-end" style="width:120px">Cant.</th></tr></thead>
+                <tbody id="inv_body_inicial"></tbody>
+              </table>
+            </div>
+            <button id="btnInvSaveInicial" class="btn btn-outline-dark w-100">Guardar inventario inicial</button>
+          </div>
+
+          <hr>
+          <div class="mt-3">
+            <div class="fw-medium">Contar stock final</div>
+            <div class="table-responsive" style="max-height:240px;overflow:auto">
+              <table class="table table-sm">
+                <thead><tr><th>SKU</th><th>Producto</th><th class="text-end" style="width:120px">Cant.</th></tr></thead>
+                <tbody id="inv_body_final"></tbody>
+              </table>
+            </div>
+            <button id="btnInvSaveFinal" class="btn btn-outline-dark w-100">Guardar inventario final</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compras / Gastos / Nómina -->
+      <div class="col-xl-6">
+        <div class="tile mb-3">
+          <div class="fw-semibold mb-2">Compras / Reposición</div>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label">SKU</label>
+              <select id="c_sku" class="form-select"></select>
+              <div class="form-text">o deja “Libre” y escribe en Nota.</div>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Cant.</label>
+              <input id="c_cant" type="number" min="1" value="1" class="form-control">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">PU</label>
+              <input id="c_pu" type="number" min="0" step="100" value="0" class="form-control">
+            </div>
+            <div class="col-md-3">
               <label class="form-label">POS</label>
-              <select id="invPOS" class="form-select">
+              <select id="c_pos" class="form-select">
                 <option>Barra</option><option>Granizados</option>
               </select>
             </div>
-            <div class="col-6 d-grid">
-              <button id="btnInventarioInicial" class="btn btn-outline-dark mt-4">Cargar catálogo POS</button>
+            <div class="col-12">
+              <label class="form-label">Notas</label>
+              <input id="c_notas" type="text" class="form-control" placeholder="Factura, proveedor o producto libre">
             </div>
             <div class="col-12">
-              <label class="form-label">Contar stock inicial (editar cantidades)</label>
-              <div id="invInicial" class="table-responsive"></div>
-            </div>
-            <div class="col-12 d-grid">
-              <button id="btnGuardarInicial" class="btn btn-dark">Guardar inventario inicial</button>
-            </div>
-            <hr/>
-            <div class="col-12">
-              <label class="form-label">Contar stock final</label>
-              <div id="invFinal" class="table-responsive"></div>
-            </div>
-            <div class="col-12 d-grid">
-              <button id="btnGuardarFinal" class="btn btn-dark">Guardar inventario final</button>
+              <button id="btnAddCompra" class="btn btn-primary w-100">Agregar compra</button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="col-12 col-lg-6">
-        <div class="tile">
-          <h6>Compras / Reposición</h6>
-          <div class="row g-2">
-            <div class="col-6">
-              <label class="form-label">SKU</label>
-              <select id="compraSku" class="form-select"></select>
+          <div class="table-responsive mt-3">
+            <table class="table table-sm align-middle">
+              <thead><tr><th>Fecha</th><th>SKU</th><th>Prod</th><th>Cant</th><th>PU</th><th>Total</th><th>POS</th><th>Notas</th><th></th></tr></thead>
+              <tbody id="tblCompras"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tile mb-3">
+          <div class="fw-semibold mb-2">Gastos</div>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Tipo</label>
+              <select id="g_tipo" class="form-select">
+                <option>Gasto</option>
+                <option>Socio</option>
+                <option>Operación</option>
+              </select>
             </div>
-            <div class="col-3">
-              <label class="form-label">Cant.</label>
-              <input id="compraCant" type="number" min="1" class="form-control" value="1"/>
+            <div class="col-md-5">
+              <label class="form-label">Concepto</label>
+              <input id="g_concepto" type="text" class="form-control" placeholder="Concepto">
             </div>
-            <div class="col-3">
-              <label class="form-label">PU</label>
-              <input id="compraPU" type="number" min="0" class="form-control" value="0"/>
+            <div class="col-md-2">
+              <label class="form-label">Valor</label>
+              <input id="g_valor" type="number" min="0" step="100" value="0" class="form-control">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">POS</label>
+              <select id="g_pos" class="form-select"><option>Barra</option><option>Granizados</option></select>
             </div>
             <div class="col-12">
-              <label class="form-label">Factura (foto)</label>
-              <input id="compraFactura" type="file" accept="image/*" class="form-control"/>
+              <label class="form-label">Socio/Persona (atribución)</label>
+              <input id="g_atr" type="text" class="form-control" placeholder="Opcional: a quién se le atribuye">
             </div>
             <div class="col-12">
               <label class="form-label">Notas</label>
-              <input id="compraNotas" class="form-control"/>
+              <input id="g_notas" type="text" class="form-control" placeholder="Detalle opcional">
             </div>
-            <div class="col-12 d-grid">
-              <button id="btnAddCompra" class="btn btn-primary">Agregar compra</button>
+            <div class="col-12">
+              <button id="btnAddGasto" class="btn btn-warning w-100">Agregar gasto</button>
             </div>
           </div>
 
-          <div class="table-responsive mt-2">
-            <table class="table table-sm" id="tblCompras"><thead><tr><th>Fecha</th><th>SKU</th><th>Prod</th><th>Cant</th><th>PU</th><th>Total</th><th>Factura</th><th>Notas</th><th></th></tr></thead><tbody></tbody></table>
+          <div class="table-responsive mt-3">
+            <table class="table table-sm align-middle">
+              <thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Valor</th><th>Atribuido</th><th>POS</th><th>Notas</th><th></th></tr></thead>
+              <tbody id="tblGastos"></tbody>
+            </table>
           </div>
         </div>
 
-        <div class="tile mt-3">
-          <h6>Gastos</h6>
-          <div class="row g-2">
-            <div class="col-4"><select id="gastoTipo" class="form-select"><option value="Gasto">Gasto</option><option value="Nomina">Nómina</option><option value="DescuentoSocio">DescuentoSocio</option></select></div>
-            <div class="col-4"><input id="gastoConcepto" class="form-control" placeholder="Concepto"/></div>
-            <div class="col-4"><input id="gastoValor" type="number" min="0" class="form-control" placeholder="Valor"/></div>
-            <div class="col-6"><input id="gastoSocio" class="form-control" placeholder="Socio/Persona (atribución)"/></div>
-            <div class="col-6"><input id="gastoNotas" class="form-control" placeholder="Notas"/></div>
-            <div class="col-12 d-grid"><button id="btnAddGasto" class="btn btn-warning">Agregar gasto</button></div>
+        <div class="tile">
+          <div class="fw-semibold mb-2">Nómina (día)</div>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">Empleado</label>
+              <input id="n_emp" type="text" class="form-control" placeholder="Nombre">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Función</label>
+              <select id="n_rol" class="form-select">
+                <option>Barra</option><option>Mesero</option><option>Granizados</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Valor</label>
+              <input id="n_valor" type="number" min="0" step="100" value="0" class="form-control">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label d-block">&nbsp;</label>
+              <button id="btnAddNomina" class="btn btn-dark w-100">Agregar</button>
+            </div>
           </div>
 
-          <div class="table-responsive mt-2">
-            <table class="table table-sm" id="tblGastos"><thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Valor</th><th>Atribuido</th><th>Notas</th><th></th></tr></thead><tbody></tbody></table>
+          <div class="table-responsive mt-3">
+            <table class="table table-sm align-middle">
+              <thead><tr><th>Fecha</th><th>Empleado</th><th>Función</th><th>Valor</th><th>Notas</th><th></th></tr></thead>
+              <tbody id="tblNomina"></tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SOCIOS -->
-  <section id="socios" class="tile mt-3" hidden>
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="m-0">Socios: KPIs, cierres y reparto</h5>
-      <button class="btn btn-sm btn-outline-secondary" data-goto="home">Volver</button>
+  <!-- ====================== SOCIOS ====================== -->
+  <section id="view_socios" class="tile hidden">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="mb-0">Socios: KPIs, cierres y reparto</h6>
+      <button class="btn btn-outline-secondary btn-sm" data-goto="home">Volver</button>
     </div>
 
-    <div class="row g-2 mt-2">
-      <div class="col-12 tile">
-        <h6>Participación de socios</h6>
-        <div id="sociosCfg" class="row g-2"></div>
-        <div class="mt-2 d-flex gap-2">
-          <input id="nuevoSocio" class="form-control" placeholder="Nombre socio"/>
-          <input id="nuevoPct" type="number" min="0" max="100" class="form-control" placeholder="%"/>
-          <button id="btnAddSocio" class="btn btn-dark">Agregar socio</button>
-        </div>
-        <div class="small text-muted mt-1">El reparto se calcula **después** de gastos (Gasto, Nómina, DescuentoSocio). Descuadres: se asignan como deuda a los encargados del POS.</div>
+    <div class="tile mb-3">
+      <div class="fw-semibold mb-2">Participación de socios</div>
+      <div id="sociosWrap" class="d-flex flex-column gap-2"></div>
+      <div class="d-flex gap-2 mt-2">
+        <input id="s_nuevo" class="form-control" placeholder="Nombre socio">
+        <input id="s_pct" class="form-control" type="number" min="0" max="100" value="0" style="max-width:120px">
+        <button id="btnAddSocio" class="btn btn-outline-primary">Agregar socio</button>
       </div>
+      <div class="form-text">El reparto se calcula después de Gastos, Compras y Nómina.</div>
+    </div>
 
-      <div class="col-12 tile mt-3">
-        <h6>Cierre diario</h6>
-        <div class="d-flex gap-2">
-          <input type="date" id="cierreFecha" class="form-control" style="max-width:200px"/>
-          <button id="btnCierreDia" class="btn btn-outline-dark">Generar</button>
-        </div>
-        <div id="cierreDia" class="mt-3"></div>
+    <div class="tile mb-3">
+      <div class="fw-semibold mb-2">Cierre diario</div>
+      <div class="d-flex gap-2 align-items-end">
+        <input id="cierre_dia" type="date" class="form-control" style="max-width:220px">
+        <button id="btnCierreDia" class="btn btn-dark">Generar</button>
       </div>
+      <div id="cierreDiaOut" class="mt-3"></div>
+    </div>
 
-      <div class="col-12 tile mt-3">
-        <h6>Cierre semanal + reparto por socio</h6>
-        <div class="d-flex gap-2">
-          <input type="date" id="semDesde" class="form-control" style="max-width:200px"/>
-          <input type="date" id="semHasta" class="form-control" style="max-width:200px"/>
-          <button id="btnCierreSem" class="btn btn-outline-dark">Generar</button>
+    <div class="tile">
+      <div class="fw-semibold mb-2">Cierre semanal + reparto por socio</div>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">Desde</label><input id="cw_desde" type="date" class="form-control"></div>
+        <div class="col-md-3"><label class="form-label">Hasta</label><input id="cw_hasta" type="date" class="form-control"></div>
+        <div class="col-md-6">
+          <label class="form-label">Gastos de cierre (semanales)</label>
+          <input id="cw_gasto" type="number" min="0" step="100" value="0" class="form-control" placeholder="Si hubo gastos extra de cierre, pon el total aquí">
         </div>
-        <div class="row g-2 mt-2">
-          <div class="col-12 col-lg-6"><div id="cierreSemResumen"></div></div>
-          <div class="col-12 col-lg-6"><div id="cierreReparto"></div></div>
+        <div class="col-12">
+          <button id="btnCierreSemanal" class="btn btn-dark w-100">Generar reparto</button>
         </div>
       </div>
+      <div id="cierreSemanalOut" class="mt-3"></div>
     </div>
   </section>
+
+  <!-- ====================== HISTORIAL ====================== -->
+  <section id="view_historial" class="tile hidden">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="mb-0">Historial / Reportes por rango</h6>
+      <button class="btn btn-outline-secondary btn-sm" data-goto="home">Volver</button>
+    </div>
+
+    <div class="row g-2">
+      <div class="col-md-3"><label class="form-label">Desde</label><input id="h_desde" type="date" class="form-control"></div>
+      <div class="col-md-3"><label class="form-label">Hasta</label><input id="h_hasta" type="date" class="form-control"></div>
+      <div class="col-md-3 d-flex align-items-end"><button id="btnHistorial" class="btn btn-primary w-100">Consultar</button></div>
+    </div>
+
+    <div id="historialOut" class="mt-3"></div>
+  </section>
+
+  <!-- ====================== CIERRES ====================== -->
+  <section id="view_cierres" class="tile hidden">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="mb-0">Cierres</h6>
+      <button class="btn btn-outline-secondary btn-sm" data-goto="home">Volver</button>
+    </div>
+
+    <div class="tile mb-3">
+      <div class="fw-semibold mb-2">Gastos de la semana (para cierre)</div>
+      <div class="row g-2">
+        <div class="col-md-3"><label class="form-label">Desde</label><input id="cs_desde" type="date" class="form-control"></div>
+        <div class="col-md-3"><label class="form-label">Hasta</label><input id="cs_hasta" type="date" class="form-control"></div>
+        <div class="col-md-3"><label class="form-label">Total gastos extra</label><input id="cs_extra" type="number" min="0" step="100" value="0" class="form-control"></div>
+        <div class="col-md-3 d-flex align-items-end"><button id="btnCierreSemanal2" class="btn btn-dark w-100">Generar</button></div>
+      </div>
+      <div id="cierreSemanalOut2" class="mt-3"></div>
+    </div>
+  </section>
+
 </div>
 
-<div class="sticky-footer d-flex justify-content-between align-items-center">
-  <div class="small text-muted">PWA lista para “Agregar a pantalla de inicio”. Datos locales. Para multi-sede: conectar BD.</div>
-  <div class="d-flex gap-2">
-    <button class="btn btn-sm btn-outline-secondary" data-goto="home">Inicio</button>
-  </div>
-</div>
+<div class="sticky-footer">PWA lista para “Agregar a pantalla de inicio”. Datos guardados en Supabase.</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- libs -->
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
+<script>dayjs.extend(window.dayjs_plugin_customParseFormat);</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ==== Supabase config & helpers (paste your real values) =================== */
-const SB_URL = 'https://jnlpnfzlluapizecuhnh.supabase.co';   // <-- REEMPLAZA
-const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpubHBuZnpsbHVhcGl6ZWN1aG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NDE1ODYsImV4cCI6MjA3MDUxNzU4Nn0.SYadrmr3aFjVM_du3Ds0rK_d0H6r81Ma5ygdKbHYgec';          // <-- REEMPLAZA
-let sb = null;
-if (typeof supabase !== 'undefined' && SB_URL.startsWith('http')) {
-  sb = supabase.createClient(SB_URL, SB_ANON_KEY);
-  console.log('[Supabase] Cliente inicializado');
-} else {
-  console.log('[Supabase] sin configurar — se usará solo localStorage');
-}
-// Map helpers entre snake_case (DB) y camelCase (UI)
-const mapVentaToDB   = (v) => ({fecha:v.fecha, hora:v.hora, pos:v.pos, sku:v.sku, cantidad:v.cantidad, metodo_pago:v.metodoPago, descuento_socio:v.descuentoSocio||0, descuadre:v.descuadre||0, notas:v.notas||null});
-const mapVentaFromDB = (r) => ({id:r.id, fecha:r.fecha, hora:r.hora||'', pos:r.pos, sku:r.sku, cantidad:r.cantidad||0, metodoPago:r.metodo_pago||'Efectivo', descuentoSocio:r.descuento_socio||0, descuadre:r.descuadre||0, notas:r.notas||''});
-
-const mapCompraToDB   = (c) => ({fecha:c.fecha, sku:c.sku, cant:c.cant, pu:c.pu, notas:c.notas||null, factura:c.factura||null});
-const mapCompraFromDB = (r) => ({id:r.id, fecha:r.fecha, sku:r.sku, cant:r.cant||0, pu:r.pu||0, notas:r.notas||'', factura:r.factura||null});
-
-const mapGastoToDB   = (g) => ({fecha:g.fecha, tipo:g.tipo, concepto:g.concepto, valor:g.valor, socio:g.socio||null, notas:g.notas||null});
-const mapGastoFromDB = (r) => ({id:r.id, fecha:r.fecha, tipo:r.tipo, concepto:r.concepto||'', valor:r.valor||0, socio:r.socio||'', notas:r.notas||''});
-
-async function dbInsertVenta(v){ if(!sb) return; const {error} = await sb.from('ventas').insert(mapVentaToDB(v)); if(error) console.error('SB ventas insert', error); }
-async function dbInsertCompra(c){ if(!sb) return; const {error} = await sb.from('compras').insert(mapCompraToDB(c)); if(error) console.error('SB compras insert', error); }
-async function dbInsertGasto(g){ if(!sb) return; const {error} = await sb.from('gastos').insert(mapGastoToDB(g)); if(error) console.error('SB gastos insert', error); }
-
-async function dbUpsertInv(fecha, pos, sku, inicial=null, final_=null){
-  if(!sb) return;
-  const payload = { fecha, pos, sku };
-  if(inicial!==null) payload.inicial = inicial;
-  if(final_!==null) payload.final = final_;
-  const { error } = await sb.from('inv_conteo').upsert(payload, { onConflict:'fecha,pos,sku' });
-  if(error) console.error('SB inv upsert', error);
-}
-
-async function dbUpsertSocio(nombre, pct){
-  if(!sb) return;
-  const { error } = await sb.from('socios').upsert({ nombre, pct }, { onConflict:'nombre' });
-  if(error) console.error('SB socio upsert', error);
-}
-
-async function dbDeleteSocio(nombre){
-  if(!sb) return;
-  const { error } = await sb.from('socios').delete().eq('nombre', nombre);
-  if(error) console.error('SB socio delete', error);
-}
-
-async function dbPullAll(){
-  if(!sb) return;
-  const since = dayjs().subtract(180,'day').format('YYYY-MM-DD');
-  try {
-    const [{ data: v }, { data: c }, { data: g }, { data: s }] = await Promise.all([
-      sb.from('ventas').select().gte('fecha', since).order('fecha'),
-      sb.from('compras').select().gte('fecha', since).order('fecha'),
-      sb.from('gastos').select().gte('fecha', since).order('fecha'),
-      sb.from('socios').select().order('nombre')
-    ]);
-    if(Array.isArray(v)) state.ventas  = v.map(mapVentaFromDB);
-    if(Array.isArray(c)) state.compras = c.map(mapCompraFromDB);
-    if(Array.isArray(g)) state.gastos  = g.map(mapGastoFromDB);
-    if(Array.isArray(s) && s.length)  state.socios  = s.map(x=>({nombre:x.nombre, pct:x.pct}));
-    saveState(); renderAll();
-    console.log('[Supabase] Datos sincronizados');
-  } catch(err){
-    console.error('[Supabase] pull', err);
+// ----------------- SUPABASE -----------------
+let supabase;
+(function initSupabase(){
+  const url = window.SUPABASE_URL || window.NEXT_PUBLIC_SUPABASE_URL;
+  const key = window.SUPABASE_ANON_KEY || window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if(!url || !key){
+    alert("Faltan credenciales de Supabase. Crea un archivo config.js con SUPABASE_URL y SUPABASE_ANON_KEY.");
+  } else {
+    supabase = window.supabase.createClient(url, key);
   }
-}
-/* ======================================================================== */
+})();
 
-dayjs.extend(dayjs_plugin_customParseFormat); dayjs.locale('es');
+// ----------------- STATE -----------------
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmt = n => (n||0).toLocaleString('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
+const today = () => dayjs().format('YYYY-MM-DD');
+$("#fechaActiva").value = today();
 
-const LS = 'bar_mvp_pwa_v1';
-const state = loadState() || seed();
-
-function seed(){
-  return {
-    socios: [
-      { nombre: "Socio A", pct: 50 },
-      { nombre: "Socio B", pct: 50 }
-    ],
-    encargados: { Barra: "Encargado Barra", Granizados: "Encargado Granizados" },
-    inventario: catalogoBase(),
-    ventas: [],
-    compras: [],
-    gastos: [],
-  };
-}
-
-function catalogoBase(){
-  // POS Barra: 10 alcoholes típicos en Medellín
-  const barra = [
-    { sku:"AGU-MED-375", nombre:"Aguardiente Antioqueño 375ml", precioUnit:45000 },
-    { sku:"AGU-MED-750", nombre:"Aguardiente Antioqueño 750ml", precioUnit:85000 },
-    { sku:"RON-MED-750", nombre:"Ron Medellín Añejo 750ml", precioUnit:95000 },
-    { sku:"RON-3AN-750", nombre:"Ron Medellín 3 Años 750ml", precioUnit:90000 },
-    { sku:"TEQ-JC-750", nombre:"Tequila José Cuervo 750ml", precioUnit:140000 },
-    { sku:"WHS-OP-750", nombre:"Whisky Old Parr 12 750ml", precioUnit:220000 },
-    { sku:"WHS-BC-750", nombre:"Whisky Buchanan's 12 750ml", precioUnit:230000 },
-    { sku:"VDK-SM-750", nombre:"Vodka Smirnoff 750ml", precioUnit:90000 },
-    { sku:"GIN-BF-750", nombre:"Ginebra Beefeater 750ml", precioUnit:120000 },
-    { sku:"CERV-POK-330", nombre:"Cerveza Poker 330ml", precioUnit:8000 }
-  ].map(p => ({ ...p, tipo:"producto", pos:"Barra", stockInicial:0, compras:0, vendidos:0, stockFinal:0, vasosPorUnidad:0 }));
-  // POS Granizados: 3 (uno con promo 2x1 -> 2 vasos)
-  const grz = [
-    { sku:"GRZ-MAR", nombre:"Granizado Maracuyá", precioUnit:12000, vasosPorUnidad:1 },
-    { sku:"GRZ-FRE", nombre:"Granizado Fresa", precioUnit:12000, vasosPorUnidad:1 },
-    { sku:"GRZ-2X1", nombre:"Granizado Promo 2x1", precioUnit:20000, vasosPorUnidad:2 }
-  ].map(p => ({ ...p, tipo:"producto", pos:"Granizados", stockInicial:0, compras:0, vendidos:0, stockFinal:0 }));
-  // Insumo vasos 12oz (global)
-  const vasos = [{ sku:"VASO-12", nombre:"Vaso plástico 12oz", precioUnit:400, tipo:"insumo", pos:"Barra", stockInicial:0, compras:0, vendidos:0, stockFinal:0, vasosPorUnidad:0 }];
-  return [...barra, ...grz, ...vasos];
-}
-
-function saveState(){ localStorage.setItem(LS, JSON.stringify(state)); }
-function loadState(){ try { return JSON.parse(localStorage.getItem(LS)); } catch(e){ return null; } }
-function money(n){ return (n||0).toLocaleString('es-CO',{style:'currency', currency:'COP', maximumFractionDigits:0}); }
-function today(){ return dayjs().format('YYYY-MM-DD'); }
-function now(){ return dayjs().format('HH:mm'); }
-function el(id){ return document.getElementById(id); }
-
-// ===== NAV =====
-document.querySelectorAll('[data-goto]').forEach(btn => {
-  btn.addEventListener('click', () => { goto(btn.dataset.goto); });
-});
+// NAV
+$$("[data-goto]").forEach(b=> b.addEventListener("click", () => goto(b.dataset.goto)));
 function goto(id){
-  ['home','mesero','pos','socios'].forEach(sec => document.getElementById(sec).hidden = (sec!==id));
-  renderAll();
+  ["home","ventas","barra","socios","historial","cierres"].forEach(v => $("#view_"+v).classList.add("hidden"));
+  $("#view_"+id).classList.remove("hidden");
 }
 
-// ===== HOME KPIs =====
-function kpisHoy(){
-  const d = today();
-  const v = state.ventas.filter(x=>x.fecha===d);
-  const g = state.gastos.filter(x=>x.fecha===d);
+// Helpers
+function toast(msg, type="primary"){
+  const el = document.createElement("div");
+  el.className = `alert alert-${type} position-fixed bottom-0 end-0 m-3`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(()=> el.remove(), 2500);
+}
 
-  let total=0, ef=0, tr=0, desc=0, descu=0;
-  v.forEach(x=>{
-    const it = state.inventario.find(i=>i.sku===x.sku) || {precioUnit:0};
-    const neto = it.precioUnit*x.cantidad - (x.descuentoSocio||0) - (x.descuadre||0);
-    total+=neto; if(x.metodoPago==='Efectivo') ef+=neto; else tr+=neto;
-    desc+=x.descuentoSocio||0; descu+=x.descuadre||0;
+// ----------------- KPI DEL DÍA -----------------
+async function loadKPIs(){
+  const f = $("#fechaActiva").value;
+  const [{ data: ventas }, { data: gastos }, { data: compras }, { data: nomina }] = await Promise.all([
+    supabase.from("ventas").select("metodo_pago,monto").eq("fecha", f),
+    supabase.from("gastos").select("valor").eq("fecha", f),
+    supabase.from("compras").select("total").eq("fecha", f),
+    supabase.from("nomina").select("valor").eq("fecha", f)
+  ]);
+
+  const totalVentas = (ventas||[]).reduce((acc,v)=> acc + (v.monto||0),0);
+  const efec = (ventas||[]).filter(v=>v.metodo_pago==="Efectivo").reduce((a,v)=>a+v.monto,0);
+  const trf  = (ventas||[]).filter(v=>v.metodo_pago==="Transferencia").reduce((a,v)=>a+v.monto,0);
+  const tg   = (gastos||[]).reduce((a,g)=>a+(g.valor||0),0);
+  const tc   = (compras||[]).reduce((a,c)=>a+(c.total||0),0);
+  const tn   = (nomina||[]).reduce((a,n)=>a+(n.valor||0),0);
+  const util = totalVentas - tg - tc - tn;
+
+  $("#kpiVentas").textContent = fmt(totalVentas);
+  $("#kpiEfectivo").textContent= fmt(efec);
+  $("#kpiTransf").textContent  = fmt(trf);
+  $("#kpiGastos").textContent  = fmt(tg);
+  $("#kpiCompras").textContent = fmt(tc);
+  $("#kpiNomina").textContent  = fmt(tn);
+  $("#kpiUtilidad").textContent= fmt(util);
+}
+
+// ----------------- CATALOGO -----------------
+let catalogo = []; // {sku, prod, pu, pos}
+async function loadCatalogo(pos){
+  const { data, error } = await supabase.from("catalogo").select("*").eq("pos", pos);
+  if(error){ toast("Error cargando catálogo: "+error.message, "danger"); return; }
+  catalogo = data||[];
+  // Ventas select
+  const s = $("#v_sku"); s.innerHTML="";
+  catalogo.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = c.sku;
+    opt.textContent = `${c.prod} (${c.sku})`;
+    s.appendChild(opt);
   });
-
-  let gto=0, nom=0, dss=0;
-  g.forEach(y=>{
-    if(y.tipo==='Gasto') gto+=y.valor;
-    else if(y.tipo==='Nomina'||y.tipo==='Nómina') nom+=y.valor;
-    else if(y.tipo==='DescuentoSocio') dss+=y.valor;
+  // Compras select
+  const csel = $("#c_sku"); csel.innerHTML="";
+  const optLibre = document.createElement("option"); optLibre.value="__LIBRE__"; optLibre.textContent="Libre (escribe en Nota)";
+  csel.appendChild(optLibre);
+  catalogo.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = c.sku;
+    opt.textContent = `${c.prod} (${c.sku})`;
+    csel.appendChild(opt);
   });
-
-  const util = total - (gto+nom+dss);
-
-  el('kpiVentas').textContent = money(total);
-  el('kpiEfec').textContent = money(ef);
-  el('kpiTransf').textContent = money(tr);
-  el('kpiUtil').textContent = money(util);
+  setPU();
 }
 
-// ===== MESERO =====
-function buildProductoSelectPOS(){
-  const pos = el('ventaPOS').value;
-  const opts = state.inventario.filter(i=>i.pos===pos && i.tipo==='producto')
-    .map(i=>`<option value="${i.sku}">${i.nombre} (${i.sku})</option>`).join('');
-  el('ventaSku').innerHTML = opts;
+$("#btnCargarCatalogo").addEventListener("click", ()=> loadCatalogo($("#v_pos").value));
+$("#inv_pos").addEventListener("change", ()=> loadCatalogo($("#inv_pos").value));
+$("#v_pos").addEventListener("change", ()=> loadCatalogo($("#v_pos").value));
+$("#c_pos").addEventListener("change", ()=> loadCatalogo($("#c_pos").value));
+$("#btnInvCargar").addEventListener("click", ()=> loadCatalogo($("#inv_pos").value));
+
+$("#v_sku").addEventListener("change", setPU);
+function setPU(){
+  const sku = $("#v_sku").value;
+  const c = catalogo.find(x=>x.sku===sku);
+  $("#v_pu").value = c?.pu || 0;
 }
-el('ventaPOS').addEventListener('change', buildProductoSelectPOS);
 
-function addVenta(){
-  const pos = el('ventaPOS').value;
-  const sku = el('ventaSku').value;
-  const cant = +el('ventaCant').value || 1;
-  const pago = el('ventaPago').value;
-  const notas = el('ventaNotas').value.trim();
-  const descSoc = +el('ventaDescSoc').value || 0;
-  const descuadre = +el('ventaDescuadre').value || 0;
-  const fecha = today();
-  const hora = now();
-  const item = state.inventario.find(i=>i.sku===sku);
-  if(!item) return alert('Producto no existe');
-  if(item.stockFinal < cant) return alert('Stock insuficiente');
+// ----------------- VENTAS -----------------
+$("#v_pago").addEventListener("change", ()=>{
+  const mixto = $("#v_pago").value==="Mixto";
+  $$(".v_mixto").forEach(x=> x.classList.toggle("hidden", !mixto));
+});
 
-  // aplicar venta
-  item.vendidos += cant; item.stockFinal -= cant;
+$("#btnAddVenta").addEventListener("click", async ()=>{
+  const f = $("#fechaActiva").value;
+  const pos = $("#v_pos").value;
+  const sku = $("#v_sku").value;
+  const c = catalogo.find(x=>x.sku===sku) || {};
+  const cant = +$("#v_cant").value||1;
+  const pu   = +$("#v_pu").value||0;
+  const pago = $("#v_pago").value;
+  const nota = $("#v_notas").value||"";
+  const hora = dayjs().format("HH:mm:ss");
 
-  // vasos
-  if(item.vasosPorUnidad && item.vasosPorUnidad>0){
-    const vasos = state.inventario.find(i=>i.sku==='VASO-12');
-    if(vasos){
-      const usar = cant * item.vasosPorUnidad;
-      vasos.vendidos += usar; vasos.stockFinal -= usar;
+  try{
+    if(pago==="Mixto"){
+      const ef = +$("#v_efectivo").value||0;
+      const tr = +$("#v_transf").value||0;
+      if(ef+tr !== cant*pu){ return alert("El total Mixto debe coincidir con Cant * PU"); }
+      const payload = [
+        {fecha:f,hora, pos, sku, prod:c.prod||sku, cant, metodo_pago:"Efectivo", monto:ef, nota},
+        {fecha:f,hora, pos, sku, prod:c.prod||sku, cant, metodo_pago:"Transferencia", monto:tr, nota}
+      ];
+      const { error } = await supabase.from("ventas").insert(payload);
+      if(error) throw error;
+    } else {
+      const total = cant*pu;
+      const { error } = await supabase.from("ventas").insert({fecha:f,hora,pos,sku,prod:c.prod||sku,cant,metodo_pago:pago,monto:total,nota});
+      if(error) throw error;
     }
-  }
+    toast("Venta guardada","success");
+    $("#v_cant").value=1; $("#v_notas").value=""; $("#v_efectivo").value=0; $("#v_transf").value=0;
+    await refreshVentas();
+    await loadKPIs();
+  }catch(err){ alert("Error guardando venta: "+err); }
+});
 
-  state.ventas.push({ id: Date.now(), fecha, hora, pos, sku, cantidad:cant, metodoPago:pago, descuentoSocio:descSoc, descuadre, notas });
-  dbInsertVenta({ id: Date.now(), fecha, hora, pos, sku, cantidad:cant, metodoPago:pago, descuentoSocio:descSoc, descuadre, notas });
-  saveState(); renderVentas(); kpisHoy();
-  el('ventaCant').value = 1; el('ventaNotas').value=''; el('ventaDescSoc').value=0; el('ventaDescuadre').value=0;
-}
-el('btnAddVenta').addEventListener('click', addVenta);
-
-function renderVentas(){
-  const tb = el('tblVentas').querySelector('tbody'); tb.innerHTML='';
-  state.ventas.slice().reverse().forEach((v, idxRev)=>{
-    const idx = state.ventas.length-1-idxRev;
-    const it = state.inventario.find(i=>i.sku===v.sku) || {precioUnit:0, nombre:''};
-    const total = it.precioUnit*v.cantidad - (v.descuentoSocio||0) - (v.descuadre||0);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${v.fecha}</td><td>${v.hora}</td><td><span class="pos-pill pos-${v.pos}">${v.pos}</span></td><td>${v.sku}</td><td>${it.nombre}</td><td>${v.cantidad}</td><td>${v.metodoPago}</td><td>${money(v.descuentoSocio||0)}</td><td>${money(v.descuadre||0)}</td><td>${money(total)}</td><td>${v.notas||''}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary me-1" data-action="edit" data-idx="${idx}">Editar</button><button class="btn btn-sm btn-outline-danger" data-action="del" data-idx="${idx}">X</button></td>`;
+async function refreshVentas(){
+  const f = $("#fechaActiva").value;
+  const { data, error } = await supabase.from("ventas").select("*").eq("fecha", f).order("hora",{ascending:false});
+  if(error){ toast("Error cargando ventas: "+error.message, "danger"); return; }
+  const tb = $("#tblVentas"); tb.innerHTML="";
+  (data||[]).forEach(v=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${v.fecha}</td><td>${v.hora||""}</td><td>${v.pos||""}</td><td>${v.sku||""}</td>
+    <td>${v.prod||""}</td><td>${v.cant||0}</td><td>${v.metodo_pago}</td><td>${fmt(v.monto)}</td><td>${v.nota||""}</td>
+    <td><button class="btn btn-sm btn-outline-danger" data-delv="${v.id}">🗑</button></td>`;
     tb.appendChild(tr);
   });
-  tb.querySelectorAll('button').forEach(b=>b.addEventListener('click', ventaRowAction));
-}
-function ventaRowAction(e){
-  const idx = +e.target.dataset.idx;
-  const action = e.target.dataset.action;
-  const v = state.ventas[idx];
-  const it = state.inventario.find(i=>i.sku===v.sku);
-  if(action==='del'){
-    if(confirm('¿Borrar venta?')){
-      if(it){ it.vendidos -= v.cantidad; it.stockFinal += v.cantidad; }
-      if(it?.vasosPorUnidad>0){
-        const vasos = state.inventario.find(i=>i.sku==='VASO-12');
-        if(vasos){ const usar = v.cantidad*it.vasosPorUnidad; vasos.vendidos -= usar; vasos.stockFinal += usar; }
-      }
-      state.ventas.splice(idx,1); saveState(); renderVentas(); kpisHoy();
-    }
-  } else if(action==='edit'){
-    // precargar
-    goto('mesero');
-    el('ventaPOS').value = v.pos; buildProductoSelectPOS();
-    el('ventaSku').value = v.sku;
-    el('ventaCant').value = v.cantidad;
-    el('ventaPago').value = v.metodoPago;
-    el('ventaNotas').value = v.notas||'';
-    el('ventaDescSoc').value = v.descuentoSocio||0;
-    el('ventaDescuadre').value = v.descuadre||0;
-    // al guardar, reemplazar: borramos y pedimos que reingrese (simple y seguro)
-    if(confirm('Para editar, se eliminará la venta actual y vuelves a agregarla con los cambios. ¿Continuar?')){
-      ventaRowAction({target:{dataset:{idx, action:'del'}}});
-    }
-  }
+  tb.querySelectorAll("[data-delv]").forEach(b=> b.addEventListener("click", async ()=>{
+    const id=b.dataset.delv; if(!confirm("Eliminar venta?")) return;
+    const { error } = await supabase.from("ventas").delete().eq("id", id);
+    if(error){ toast("No se pudo eliminar","danger"); return; }
+    refreshVentas(); loadKPIs();
+  }));
 }
 
-// ===== POS Inventarios/Compras/Gastos =====
-function rebuildCompraSelect(){
-  const opts = state.inventario.map(i=>`<option value="${i.sku}">${i.nombre} (${i.sku})</option>`).join('');
-  el('compraSku').innerHTML = opts;
-}
-
-function tableInventario(pos, tipo){
-  const items = state.inventario.filter(i=>i.pos===pos && i.tipo==='producto');
-  const rows = items.map(i=>`
-    <tr>
-      <td>${i.sku}</td><td>${i.nombre}</td>
-      <td style="width:110px"><input class="form-control form-control-sm" type="number" value="${tipo==='inicial'? i.stockInicial: i.stockFinal}" data-sku="${i.sku}" data-tipo="${tipo}"/></td>
-    </tr>
-  `).join('');
-  return `<table class="table table-sm"><thead><tr><th>SKU</th><th>Producto</th><th>Cantidad</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-
-el('btnInventarioInicial').addEventListener('click', ()=>{
-  const pos = el('invPOS').value;
-  el('invInicial').innerHTML = tableInventario(pos,'inicial');
-  el('invFinal').innerHTML = tableInventario(pos,'final');
-});
-
-el('btnGuardarInicial').addEventListener('click', ()=>{
-  document.querySelectorAll('#invInicial input[data-tipo="inicial"]').forEach(inp=>{
-    const i = state.inventario.find(x=>x.sku===inp.dataset.sku);
-    const v = +inp.value||0;
-    i.stockInicial = v;
-    // resetea final si no se ha contado aún
-    if(i.stockFinal===0) i.stockFinal = v;
-    dbUpsertInv(today(), document.getElementById("invPOS").value, i.sku, null, v);
-    dbUpsertInv(today(), document.getElementById("invPOS").value, i.sku, v, null);
+// ----------------- INVENTARIO -----------------
+function renderInvTable(targetId){
+  const body = $(targetId); body.innerHTML="";
+  catalogo.forEach(c=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${c.sku}</td><td>${c.prod}</td>
+      <td class="text-end"><input type="number" min="0" value="0" class="form-control form-control-sm inv-cant" data-sku="${c.sku}" style="max-width:100px; margin-left:auto"></td>`;
+    body.appendChild(tr);
   });
-  saveState(); alert('Inventario inicial guardado');
+}
+$("#btnInvCargar").addEventListener("click", ()=> { renderInvTable("#inv_body_inicial"); renderInvTable("#inv_body_final"); });
+
+$("#btnInvSaveInicial").addEventListener("click", ()=> saveInv("inicial"));
+$("#btnInvSaveFinal").addEventListener("click", ()=> saveInv("final"));
+
+async function saveInv(tipo){
+  const pos = $("#inv_pos").value;
+  const fecha = $("#fechaActiva").value;
+  const selector = tipo==="inicial" ? "#inv_body_inicial .inv-cant" : "#inv_body_final .inv-cant";
+  const detalle = Array.from(document.querySelectorAll(selector)).map(x => ({sku:x.dataset.sku, cant:+x.value}));
+  const payload = { fecha, pos, tipo, detalle };
+  const { error } = await supabase.from("inv_conteo").insert(payload);
+  if(error){ toast("Error guardando inventario: "+error.message,"danger"); return; }
+  toast("Inventario "+tipo+" guardado","success");
+}
+
+// ----------------- COMPRAS -----------------
+$("#btnAddCompra").addEventListener("click", async ()=>{
+  const f = $("#fechaActiva").value;
+  const sku = $("#c_sku").value;
+  const cant = +$("#c_cant").value||1;
+  const pu = +$("#c_pu").value||0;
+  const total = cant*pu;
+  const pos = $("#c_pos").value;
+  const notas = $("#c_notas").value||"";
+  const prod = sku==="__LIBRE__" ? notas : (catalogo.find(x=>x.sku===sku)?.prod || sku);
+  try{
+    const { error } = await supabase.from("compras").insert({fecha:f, sku: (sku==="__LIBRE__"? null : sku), prod, cant, pu, total, pos, nota:notas});
+    if(error) throw error;
+    toast("Compra guardada","success");
+    $("#c_notas").value=""; $("#c_cant").value=1; $("#c_pu").value=0;
+    refreshCompras(); loadKPIs();
+  }catch(err){ alert("Error guardando compra: "+err); }
 });
 
-el('btnGuardarFinal').addEventListener('click', ()=>{
-  document.querySelectorAll('#invFinal input[data-tipo="final"]').forEach(inp=>{
-    const i = state.inventario.find(x=>x.sku===inp.dataset.sku);
-    const v = +inp.value||0;
-    i.stockFinal = v;
-    dbUpsertInv(today(), document.getElementById("invPOS").value, i.sku, null, v);
-  });
-  saveState(); alert('Inventario final guardado');
-});
-
-// Compras
-el('btnAddCompra').addEventListener('click', ()=>{
-  const sku = el('compraSku').value;
-  const cant = +el('compraCant').value||0;
-  const pu = +el('compraPU').value||0;
-  const notas = el('compraNotas').value.trim();
-  const file = el('compraFactura').files[0];
-
-  const it = state.inventario.find(i=>i.sku===sku);
-  if(!it) return alert('SKU no existe');
-  it.compras += cant; it.stockFinal += cant;
-
-  const add = (factura)=>{
-    state.compras.push({ id: Date.now(), fecha: today(), sku, cant, pu, notas, factura });
-    dbInsertCompra({ id: Date.now(), fecha: today(), sku, cant, pu, notas, factura });
-    saveState(); renderCompras();
-    el('compraCant').value=1; el('compraPU').value=0; el('compraNotas').value=''; el('compraFactura').value='';
-  }
-
-  if(file){
-    const reader = new FileReader();
-    reader.onload = ()=> add(reader.result);
-    reader.readAsDataURL(file);
-  } else add(null);
-});
-
-function renderCompras(){
-  const tb = el('tblCompras').querySelector('tbody'); tb.innerHTML='';
-  state.compras.slice().reverse().forEach((c, idxRev)=>{
-    const idx = state.compras.length-1-idxRev;
-    const it = state.inventario.find(i=>i.sku===c.sku) || {nombre:''};
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${c.fecha}</td><td>${c.sku}</td><td>${it.nombre}</td><td>${c.cant}</td><td>${money(c.pu)}</td><td>${money(c.cant*c.pu)}</td><td>${c.factura?'<span class="badge bg-secondary">Sí</span>':'—'}</td><td>${c.notas||''}</td><td class="text-end"><button class="btn btn-sm btn-outline-danger" data-action="del" data-idx="${idx}">X</button></td>`;
+async function refreshCompras(){
+  const f = $("#fechaActiva").value;
+  const { data, error } = await supabase.from("compras").select("*").eq("fecha", f).order("id",{ascending:false});
+  if(error){ toast("Error cargando compras: "+error.message,"danger"); return; }
+  const tb = $("#tblCompras"); tb.innerHTML="";
+  (data||[]).forEach(c=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${c.fecha}</td><td>${c.sku||""}</td><td>${c.prod||""}</td>
+      <td>${c.cant||0}</td><td>${fmt(c.pu||0)}</td><td>${fmt(c.total||0)}</td><td>${c.pos||""}</td><td>${c.nota||""}</td>
+      <td><button class="btn btn-sm btn-outline-danger" data-delc="${c.id}">🗑</button></td>`;
     tb.appendChild(tr);
   });
-  tb.querySelectorAll('button').forEach(b=>b.addEventListener('click', e=>{
-    const idx = +e.target.dataset.idx;
-    if(confirm('¿Eliminar compra?')){
-      const c = state.compras[idx];
-      const it = state.inventario.find(i=>i.sku===c.sku);
-      if(it){ it.compras -= c.cant; it.stockFinal -= c.cant; }
-      state.compras.splice(idx,1); saveState(); renderCompras();
-    }
+  tb.querySelectorAll("[data-delc]").forEach(b=> b.addEventListener("click", async ()=>{
+    const id=b.dataset.delc; if(!confirm("Eliminar compra?")) return;
+    const { error } = await supabase.from("compras").delete().eq("id", id);
+    if(error){ toast("No se pudo eliminar compra","danger"); return; }
+    refreshCompras(); loadKPIs();
   }));
 }
 
-// Gastos
-el('btnAddGasto').addEventListener('click', ()=>{
-  const tipo = el('gastoTipo').value;
-  const concepto = el('gastoConcepto').value.trim();
-  const valor = +el('gastoValor').value||0;
-  const socio = el('gastoSocio').value.trim();
-  const notas = el('gastoNotas').value.trim();
-  state.gastos.push({ id: Date.now(), fecha: today(), tipo, concepto, valor, socio, notas });
-  dbInsertGasto({ id: Date.now(), fecha: today(), tipo, concepto, valor, socio, notas });
-  saveState(); renderGastos();
-  el('gastoConcepto').value=''; el('gastoValor').value=0; el('gastoSocio').value=''; el('gastoNotas').value='';
+// ----------------- GASTOS -----------------
+$("#btnAddGasto").addEventListener("click", async ()=>{
+  const f = $("#fechaActiva").value;
+  const tipo = $("#g_tipo").value;
+  const concepto = $("#g_concepto").value||"";
+  const valor = +$("#g_valor").value||0;
+  const pos = $("#g_pos").value;
+  const atr = $("#g_atr").value||"";
+  const notas = $("#g_notas").value||"";
+  try{
+    const { error } = await supabase.from("gastos").insert({fecha:f,tipo,concepto,valor,atribuido:atr,pos,notas});
+    if(error) throw error;
+    toast("Gasto guardado","success");
+    $("#g_concepto").value=""; $("#g_valor").value=0; $("#g_atr").value=""; $("#g_notas").value="";
+    refreshGastos(); loadKPIs();
+    if(tipo==="Socio"){
+      // Cargo a deudas de socio
+      await supabase.from("deudas").insert({fecha:f,tipo:"socio",ref_nombre:atr || "Socio", motivo:concepto, valor, saldo:valor});
+    }
+  }catch(err){ alert("Error guardando gasto: "+err); }
 });
 
-function renderGastos(){
-  const tb = el('tblGastos').querySelector('tbody'); tb.innerHTML='';
-  state.gastos.slice().reverse().forEach((g, idxRev)=>{
-    const idx = state.gastos.length-1-idxRev;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${g.fecha}</td><td>${g.tipo}</td><td>${g.concepto}</td><td>${money(g.valor)}</td><td>${g.socio||'—'}</td><td>${g.notas||''}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary me-1" data-action="edit" data-idx="${idx}">Editar</button><button class="btn btn-sm btn-outline-danger" data-action="del" data-idx="${idx}">X</button></td>`;
+async function refreshGastos(){
+  const f = $("#fechaActiva").value;
+  const { data, error } = await supabase.from("gastos").select("*").eq("fecha", f).order("id",{ascending:false});
+  if(error){ toast("Error cargando gastos: "+error.message,"danger"); return; }
+  const tb = $("#tblGastos"); tb.innerHTML="";
+  (data||[]).forEach(g=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${g.fecha}</td><td>${g.tipo||""}</td><td>${g.concepto||""}</td><td>${fmt(g.valor||0)}</td>
+      <td>${g.atribuido||""}</td><td>${g.pos||""}</td><td>${g.notas||""}</td>
+      <td><button class="btn btn-sm btn-outline-danger" data-delg="${g.id}">🗑</button></td>`;
     tb.appendChild(tr);
   });
-  tb.querySelectorAll('button').forEach(b=>b.addEventListener('click', e=>{
-    const idx = +e.target.dataset.idx;
-    const action = e.target.dataset.action;
-    if(action==='del'){
-      if(confirm('¿Eliminar gasto?')){ state.gastos.splice(idx,1); saveState(); renderGastos(); }
-    } else if(action==='edit'){
-      const g = state.gastos[idx];
-      el('gastoTipo').value = g.tipo; el('gastoConcepto').value=g.concepto; el('gastoValor').value=g.valor; el('gastoSocio').value=g.socio||''; el('gastoNotas').value=g.notas||'';
-      if(confirm('Para editar, se eliminará y la vuelves a ingresar con cambios. ¿Continuar?')){
-        state.gastos.splice(idx,1); saveState(); renderGastos();
-      }
-    }
+  tb.querySelectorAll("[data-delg]").forEach(b=> b.addEventListener("click", async ()=>{
+    const id=b.dataset.delg; if(!confirm("Eliminar gasto?")) return;
+    const { error } = await supabase.from("gastos").delete().eq("id", id);
+    if(error){ toast("No se pudo eliminar gasto","danger"); return; }
+    refreshGastos(); loadKPIs();
   }));
 }
 
-// ===== SOCIOS Config & Cierres =====
-function renderSociosCfg(){
-  const cont = el('sociosCfg'); cont.innerHTML='';
-  state.socios.forEach((s, i)=>{
-    const div = document.createElement('div');
-    div.className = 'col-12 col-md-6';
-    div.innerHTML = `<div class="d-flex gap-2 align-items-center border rounded p-2"><input class="form-control" value="${s.nombre}" data-i="${i}" data-f="nombre"/><input type="number" class="form-control" value="${s.pct}" data-i="${i}" data-f="pct"/><span>%</span><button class="btn btn-sm btn-outline-danger" data-del="${i}">X</button></div>`;
-    cont.appendChild(div);
-  });
-  cont.querySelectorAll('input').forEach(inp=>inp.addEventListener('change', (e)=>{
-    const i = +e.target.dataset.i; const f = e.target.dataset.f;
-    state.socios[i][f] = f==='pct' ? (+e.target.value||0) : e.target.value;
-    dbUpsertSocio(state.socios[i].nombre, state.socios[i].pct);
-    saveState();
-  }));
-  cont.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click', (e)=>{
-    const i = +e.target.dataset.del;
-    dbDeleteSocio(state.socios[i].nombre);
-    state.socios.splice(i,1); saveState(); renderSociosCfg();
-  }));
-}
-el('btnAddSocio').addEventListener('click', ()=>{
-  const n = el('nuevoSocio').value.trim(); const p = +el('nuevoPct').value||0;
-  if(!n) return; state.socios.push({nombre:n, pct:p}); dbUpsertSocio(n, p); el('nuevoSocio').value=''; el('nuevoPct').value=''; saveState(); renderSociosCfg();
+// ----------------- NOMINA -----------------
+$("#btnAddNomina").addEventListener("click", async ()=>{
+  const f = $("#fechaActiva").value;
+  const emp = $("#n_emp").value.trim();
+  const rol = $("#n_rol").value;
+  const valor = +$("#n_valor").value||0;
+  if(!emp) return alert("Escribe el nombre del empleado");
+  try{
+    const { error } = await supabase.from("nomina").insert({fecha:f, empleado:emp, rol, valor, notas:""});
+    if(error) throw error;
+    toast("Nómina guardada","success");
+    $("#n_emp").value=""; $("#n_valor").value=0;
+    refreshNomina(); loadKPIs();
+  }catch(err){ alert("Error guardando nómina: "+err); }
 });
 
-function cierreDiarioHTML(fecha){
-  const v = state.ventas.filter(x=>x.fecha===fecha);
-  const g = state.gastos.filter(x=>x.fecha===fecha);
-  const c = state.compras.filter(x=>x.fecha===fecha);
-
-  const porPOS = (pos) => v.filter(x=>x.pos===pos).reduce((acc,cur)=>{
-    const it = state.inventario.find(i=>i.sku===cur.sku) || {precioUnit:0};
-    const neto = it.precioUnit*cur.cantidad - (cur.descuentoSocio||0) - (cur.descuadre||0);
-    acc.total+=neto; if(cur.metodoPago==='Efectivo') acc.ef+=neto; else acc.tr+=neto;
-    acc.desc += cur.descuentoSocio||0; acc.desq += cur.descuadre||0;
-    return acc;
-  }, {total:0, ef:0, tr:0, desc:0, desq:0});
-
-  const barra = porPOS('Barra'); const grz = porPOS('Granizados');
-
-  let gto=0, nom=0, dss=0;
-  const porSocio = {};
-  g.forEach(x=>{
-    if(x.tipo==='Gasto') gto+=x.valor;
-    else if(x.tipo==='Nomina'||x.tipo==='Nómina') nom+=x.valor;
-    else if(x.tipo==='DescuentoSocio') dss+=x.valor;
-    const key = x.socio||'—';
-    porSocio[key] = (porSocio[key]||0) + x.valor;
+async function refreshNomina(){
+  const f = $("#fechaActiva").value;
+  const { data, error } = await supabase.from("nomina").select("*").eq("fecha", f).order("id",{ascending:false});
+  if(error){ toast("Error cargando nómina: "+error.message,"danger"); return; }
+  const tb = $("#tblNomina"); tb.innerHTML="";
+  (data||[]).forEach(n=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${n.fecha}</td><td>${n.empleado||""}</td><td>${n.rol||""}</td><td>${fmt(n.valor||0)}</td><td>${n.notas||""}</td>
+      <td><button class="btn btn-sm btn-outline-danger" data-deln="${n.id}">🗑</button></td>`;
+    tb.appendChild(tr);
   });
+  tb.querySelectorAll("[data-deln]").forEach(b=> b.addEventListener("click", async ()=>{
+    const id=b.dataset.deln; if(!confirm("Eliminar registro de nómina?")) return;
+    const { error } = await supabase.from("nomina").delete().eq("id", id);
+    if(error){ toast("No se pudo eliminar","danger"); return; }
+    refreshNomina(); loadKPIs();
+  }));
+}
 
-  const descuadreBarra = barra.desq;
-  const descuadreGrz = grz.desq;
+// ----------------- SOCIOS -----------------
+async function loadSocios(){
+  const { data } = await supabase.from("socios").select("*").order("id");
+  const wrap = $("#sociosWrap"); wrap.innerHTML="";
+  (data||[]).forEach(s => {
+    const row = document.createElement("div");
+    row.className="d-flex gap-2";
+    row.innerHTML = `<input class="form-control" value="${s.nombre}" data-socio="${s.id}" data-field="nombre">
+    <input class="form-control" style="max-width:120px" type="number" min="0" max="100" value="${s.porcentaje||0}" data-socio="${s.id}" data-field="porcentaje">
+    <button class="btn btn-outline-danger btn-sm" data-del-socio="${s.id}">X</button>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll("[data-socio]").forEach(inp=> inp.addEventListener("change", async ()=>{
+    const id=inp.dataset.socio, field=inp.dataset.field, value=inp.value;
+    await supabase.from("socios").update({[field]: field==="porcentaje" ? +value : value}).eq("id", id);
+  }));
+  wrap.querySelectorAll("[data-del-socio]").forEach(b=> b.addEventListener("click", async ()=>{
+    const id=b.dataset.delSocio; if(!confirm("Eliminar socio?")) return;
+    await supabase.from("socios").delete().eq("id", id); loadSocios();
+  }));
+}
+$("#btnAddSocio").addEventListener("click", async ()=>{
+  const nombre=$("#s_nuevo").value.trim(); const pct= +$("#s_pct").value||0;
+  if(!nombre) return;
+  await supabase.from("socios").insert({nombre, porcentaje:pct}); $("#s_nuevo").value=""; $("#s_pct").value=0; loadSocios();
+});
 
-  const html = `
-  <div class="row g-2">
-    <div class="col-12 col-lg-6"><div class="tile">
-      <h6>Ventas Barra</h6>
-      <div>Total: <b>${money(barra.total)}</b></div>
-      <div>Efectivo: ${money(barra.ef)} · Transf: ${money(barra.tr)}</div>
-      <div>Desc (ventas): ${money(barra.desc)} · Descuadre: ${money(barra.desq)}</div>
-    </div></div>
-    <div class="col-12 col-lg-6"><div class="tile">
-      <h6>Ventas Granizados</h6>
-      <div>Total: <b>${money(grz.total)}</b></div>
-      <div>Efectivo: ${money(grz.ef)} · Transf: ${money(grz.tr)}</div>
-      <div>Desc (ventas): ${money(grz.desc)} · Descuadre: ${money(grz.desq)}</div>
-    </div></div>
-  </div>
-  <div class="tile mt-2">
-    <h6>Gastos del día</h6>
-    <div>Gastos: <b>${money(gto)}</b> · Nómina: <b>${money(nom)}</b> · Desc. Socios: <b>${money(dss)}</b></div>
-  </div>
-  <div class="tile mt-2">
-    <h6>Compras del día</h6>
-    <div>${money(c.reduce((a,b)=>a+b.cant*b.pu,0))}</div>
-  </div>
-  <div class="tile mt-2">
-    <h6>Deudas por descuadre (empleados)</h6>
-    <div>Barra (${state.encargados.Barra}): <b>${money(descuadreBarra)}</b></div>
-    <div>Granizados (${state.encargados.Granizados}): <b>${money(descuadreGrz)}</b></div>
+$("#btnCierreDia").addEventListener("click", async ()=>{
+  const f = $("#cierre_dia").value; if(!f) return alert("Selecciona una fecha");
+  const res = await resumenRango(f, f);
+  $("#cierreDiaOut").innerHTML = renderResumenHtml(res);
+});
+
+$("#btnCierreSemanal").addEventListener("click", async ()=>{
+  const d=$("#cw_desde").value, h=$("#cw_hasta").value; if(!d||!h) return alert("Fechas incompletas");
+  const res = await resumenRango(d,h);
+  const extra = +$("#cw_gasto").value||0;
+  res.gastos += extra; res.utilidad -= extra;
+  $("#cierreSemanalOut").innerHTML = renderResumenHtml(res,true);
+});
+
+// ----------------- HISTORIAL -----------------
+$("#btnHistorial").addEventListener("click", async ()=>{
+  const d=$("#h_desde").value, h=$("#h_hasta").value; if(!d||!h) return alert("Fechas incompletas");
+  const res = await resumenRango(d,h,true);
+  $("#historialOut").innerHTML = renderResumenHtml(res,true,true);
+});
+
+// ----------------- CIERRES pantalla extra -----------------
+$("#btnCierreSemanal2").addEventListener("click", async ()=>{
+  const d=$("#cs_desde").value, h=$("#cs_hasta").value; if(!d||!h) return alert("Fechas incompletas");
+  const res = await resumenRango(d,h);
+  const extra = +$("#cs_extra").value||0;
+  res.gastos += extra; res.utilidad -= extra;
+  $("#cierreSemanalOut2").innerHTML = renderResumenHtml(res,true);
+});
+
+// ----------------- RESUMEN / CONSULTAS -----------------
+async function resumenRango(desde, hasta, withRows=false){
+  const queries = [
+    supabase.from("ventas").select(withRows?"*":"monto,metodo_pago,fecha").gte("fecha", desde).lte("fecha", hasta),
+    supabase.from("gastos").select(withRows?"*":"valor,tipo,fecha").gte("fecha", desde).lte("fecha", hasta),
+    supabase.from("compras").select(withRows?"*":"total,fecha").gte("fecha", desde).lte("fecha", hasta),
+    supabase.from("nomina").select(withRows?"*":"valor,fecha").gte("fecha", desde).lte("fecha", hasta),
+  ];
+  const [{data: v},{data:g},{data:c},{data:n}] = await Promise.all(queries);
+  const totalVentas = (v||[]).reduce((a,x)=>a+(x.monto||0),0);
+  const ef = (v||[]).filter(x=>x.metodo_pago==="Efectivo").reduce((a,x)=>a+x.monto,0);
+  const tr = (v||[]).filter(x=>x.metodo_pago==="Transferencia").reduce((a,x)=>a+x.monto,0);
+  const tg = (g||[]).reduce((a,x)=>a+(x.valor||0),0);
+  const tc = (c||[]).reduce((a,x)=>a+(x.total||0),0);
+  const tn = (n||[]).reduce((a,x)=>a+(x.valor||0),0);
+  const util = totalVentas - tg - tc - tn;
+  return {desde, hasta, totalVentas, ef, tr, gastos:tg, compras:tc, nomina:tn, utilidad:util, v, g, c, n};
+}
+
+function renderResumenHtml(r, showSocios=false, withTables=false){
+  let html=`
+  <div class="row g-3">
+    <div class="col-md-3"><div class="tile"><div class="text-secondary small">Ventas</div><div class="fs-6 fw-semibold">${fmt(r.totalVentas)}</div></div></div>
+    <div class="col-md-3"><div class="tile"><div class="text-secondary small">Efectivo</div><div class="fs-6 fw-semibold">${fmt(r.ef)}</div></div></div>
+    <div class="col-md-3"><div class="tile"><div class="text-secondary small">Transf.</div><div class="fs-6 fw-semibold">${fmt(r.tr)}</div></div></div>
+    <div class="col-md-3"><div class="tile"><div class="text-secondary small">Gastos</div><div class="fs-6 fw-semibold">${fmt(r.gastos)}</div></div></div>
+    <div class="col-md-3"><div class="tile"><div class="text-secondary small">Compras</div><div class="fs-6 fw-semibold">${fmt(r.compras)}</div></div></div>
+    <div class="col-md-3"><div class="tile"><div class="text-secondary small">Nómina</div><div class="fs-6 fw-semibold">${fmt(r.nomina)}</div></div></div>
+    <div class="col-md-3"><div class="tile bg-success-subtle"><div class="text-secondary small">Utilidad</div><div class="fs-6 fw-semibold">${fmt(r.utilidad)}</div></div></div>
   </div>`;
+
+  if(showSocios){
+    html += `<hr><div id="repartoSocios"></div>`;
+    renderRepartoSocios(r.utilidad);
+  }
+  if(withTables){
+    html += `
+    <hr>
+    <div class="mt-3">
+      <h6>Ventas</h6>
+      <div class="table-responsive"><table class="table table-sm"><thead><tr>
+        <th>Fecha</th><th>Hora</th><th>POS</th><th>SKU</th><th>Prod</th><th>Cant</th><th>Pago</th><th>Monto</th><th>Nota</th>
+      </tr></thead><tbody>${
+        (r.v||[]).map(x=>`<tr><td>${x.fecha}</td><td>${x.hora||""}</td><td>${x.pos||""}</td><td>${x.sku||""}</td><td>${x.prod||""}</td><td>${x.cant||0}</td><td>${x.metodo_pago}</td><td>${fmt(x.monto)}</td><td>${x.nota||""}</td></tr>`).join("")
+      }</tbody></table></div>
+
+      <h6>Compras</h6>
+      <div class="table-responsive"><table class="table table-sm"><thead><tr>
+        <th>Fecha</th><th>SKU</th><th>Prod</th><th>Cant</th><th>PU</th><th>Total</th><th>POS</th><th>Nota</th>
+      </tr></thead><tbody>${
+        (r.c||[]).map(x=>`<tr><td>${x.fecha}</td><td>${x.sku||""}</td><td>${x.prod||""}</td><td>${x.cant||0}</td><td>${fmt(x.pu||0)}</td><td>${fmt(x.total||0)}</td><td>${x.pos||""}</td><td>${x.nota||""}</td></tr>`).join("")
+      }</tbody></table></div>
+
+      <h6>Gastos</h6>
+      <div class="table-responsive"><table class="table table-sm"><thead><tr>
+        <th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Valor</th><th>Atribuido</th><th>POS</th><th>Notas</th>
+      </tr></thead><tbody>${
+        (r.g||[]).map(x=>`<tr><td>${x.fecha}</td><td>${x.tipo||""}</td><td>${x.concepto||""}</td><td>${fmt(x.valor||0)}</td><td>${x.atribuido||""}</td><td>${x.pos||""}</td><td>${x.notas||""}</td></tr>`).join("")
+      }</tbody></table></div>
+
+      <h6>Nómina</h6>
+      <div class="table-responsive"><table class="table table-sm"><thead><tr>
+        <th>Fecha</th><th>Empleado</th><th>Rol</th><th>Valor</th><th>Notas</th>
+      </tr></thead><tbody>${
+        (r.n||[]).map(x=>`<tr><td>${x.fecha}</td><td>${x.empleado||""}</td><td>${x.rol||""}</td><td>${fmt(x.valor||0)}</td><td>${x.notas||""}</td></tr>`).join("")
+      }</tbody></table></div>
+    </div>`;
+  }
+
   return html;
 }
 
-el('btnCierreDia').addEventListener('click', ()=>{
-  const f = el('cierreFecha').value || today();
-  el('cierreDia').innerHTML = cierreDiarioHTML(f);
-});
-
-function cierreSemanal(desde,hasta){
-  const inR = d => dayjs(d).isAfter(dayjs(desde).subtract(1,'day')) && dayjs(d).isBefore(dayjs(hasta).add(1,'day'));
-  const v = state.ventas.filter(x=>inR(x.fecha));
-  const g = state.gastos.filter(x=>inR(x.fecha));
-
-  let totalVentas=0, descV=0, desqV=0, ef=0, tr=0;
-  v.forEach(x=>{
-    const it = state.inventario.find(i=>i.sku===x.sku) || {precioUnit:0};
-    const neto = it.precioUnit*x.cantidad - (x.descuentoSocio||0) - (x.descuadre||0);
-    totalVentas += neto;
-    if(x.metodoPago==='Efectivo') ef+=neto; else tr+=neto;
-    descV += x.descuentoSocio||0;
-    desqV += x.descuadre||0;
+async function renderRepartoSocios(utilidad){
+  const { data } = await supabase.from("socios").select("*");
+  const wrap = $("#repartoSocios"); wrap.innerHTML="";
+  const totalPct = (data||[]).reduce((a,x)=>a+(x.porcentaje||0),0);
+  let html = `<div class="table-responsive"><table class="table table-sm">
+  <thead><tr><th>Socio</th><th>%</th><th>Ganancia</th><th>Deuda (cargos)</th><th>Saldo</th></tr></thead><tbody>`;
+  const { data: ds } = await supabase.from("deudas").select("tipo,ref_nombre,saldo").eq("tipo","socio");
+  (data||[]).forEach(s=>{
+    const part = utilidad * ((s.porcentaje||0)/100);
+    const deuda = (ds||[]).filter(x=>x.ref_nombre===s.nombre).reduce((a,x)=>a+(x.saldo||0),0);
+    html += `<tr><td>${s.nombre}</td><td>${s.porcentaje||0}%</td><td>${fmt(part)}</td><td>${fmt(deuda)}</td><td>${fmt(part - deuda)}</td></tr>`;
   });
-
-  let gto=0, nom=0, dss=0;
-  const gastosPorSocio = {};
-  g.forEach(y=>{
-    if(y.tipo==='Gasto') gto+=y.valor;
-    else if(y.tipo==='Nomina'||y.tipo==='Nómina') nom+=y.valor;
-    else if(y.tipo==='DescuentoSocio') dss+=y.valor;
-    if(y.socio){ gastosPorSocio[y.socio] = (gastosPorSocio[y.socio]||0) + y.valor; }
-  });
-
-  // deudas por descuadre a encargados
-  const deudas = { };
-  const barraDes = state.ventas.filter(x=>inR(x.fecha) && x.pos==='Barra').reduce((a,b)=>a+(b.descuadre||0),0);
-  const grzDes = state.ventas.filter(x=>inR(x.fecha) && x.pos==='Granizados').reduce((a,b)=>a+(b.descuadre||0),0);
-  deudas[state.encargados.Barra] = barraDes;
-  deudas[state.encargados.Granizados] = grzDes;
-
-  const utilidadNeta = totalVentas - (gto+nom+dss);
-
-  // reparto por % de socios, luego ajustes por gastos/desc propios
-  const reparto = state.socios.map(s => {
-    const base = utilidadNeta * (s.pct/100);
-    const atrib = gastosPorSocio[s.nombre] || 0; // incluye DescuentoSocio si se atribuyó al socio
-    const final = base - atrib;
-    return { socio: s.nombre, pct: s.pct, base: Math.round(base), ajustes: Math.round(-atrib), final: Math.round(final) };
-  });
-
-  // Render
-  el('cierreSemResumen').innerHTML = `
-    <div class="tile">
-      <div><b>${desde}</b> a <b>${hasta}</b></div>
-      <div class="mt-2">Ventas: <b>${money(totalVentas)}</b> · Efectivo: ${money(ef)} · Transf: ${money(tr)}</div>
-      <div>Desc (ventas): ${money(descV)} · Descuadres: ${money(desqV)}</div>
-      <div>Gastos: ${money(gto)} · Nómina: ${money(nom)} · Desc. Socios: ${money(dss)}</div>
-      <div class="mt-2">Utilidad neta: <b>${money(utilidadNeta)}</b></div>
-      <div class="mt-2"><b>Deudas (empleados)</b>: ${state.encargados.Barra}: ${money(barraDes)} · ${state.encargados.Granizados}: ${money(grzDes)}</div>
-    </div>
-  `;
-
-  el('cierreReparto').innerHTML = `
-    <div class="tile">
-      <h6>Reparto por socio (después de gastos)</h6>
-      <div class="table-responsive">
-        <table class="table table-sm">
-          <thead><tr><th>Socio</th><th>%</th><th>Base</th><th>Ajustes (gastos y desc propios)</th><th>Total a pagar</th></tr></thead>
-          <tbody>${reparto.map(r=>`<tr><td>${r.socio}</td><td>${r.pct}%</td><td>${money(r.base)}</td><td>${money(r.ajustes)}</td><td><b>${money(r.final)}</b></td></tr>`).join('')}</tbody>
-        </table>
-      </div>
-    </div>
-  `;
+  html += `</tbody></table></div>`;
+  wrap.innerHTML = html;
 }
-el('btnCierreSem').addEventListener('click', ()=>{
-  const d = el('semDesde').value, h = el('semHasta').value;
-  if(!d || !h) return alert('Selecciona fechas');
-  cierreSemanal(d,h);
-});
 
-// ===== Export =====
-document.getElementById('btnExportXLSX').addEventListener('click', ()=>{
+// ----------------- DEUDAS LISTAS EN HOME -----------------
+async function loadDeudas(){
+  const { data } = await supabase.from("deudas").select("*");
+  const emp = (data||[]).filter(x=>x.tipo==="empleado");
+  const soc = (data||[]).filter(x=>x.tipo==="socio");
+  $("#listaDeudasEmpleados").innerHTML = emp.map(x=>`<li class="list-group-item d-flex justify-content-between align-items-center">
+    <span>${x.ref_nombre} — ${x.motivo||"descuadre"}</span><span class="fw-semibold">${fmt(x.saldo||0)}</span>
+  </li>`).join("") || `<li class="list-group-item">Sin deudas</li>`;
+  $("#listaDeudasSocios").innerHTML = soc.map(x=>`<li class="list-group-item d-flex justify-content-between align-items-center">
+    <span>${x.ref_nombre} — ${x.motivo||"cargo"}</span><span class="fw-semibold">${fmt(x.saldo||0)}</span>
+  </li>`).join("") || `<li class="list-group-item">Sin deudas</li>`;
+}
+
+// ----------------- EXPORTS -----------------
+$("#btnExportXLSX").addEventListener("click", async ()=>{
+  const d = $("#h_desde").value || $("#fechaActiva").value;
+  const h = $("#h_hasta").value || $("#fechaActiva").value;
+  const r = await resumenRango(d,h,true);
   const wb = XLSX.utils.book_new();
-  const ventas = state.ventas.map(v=>{
-    const it = state.inventario.find(i=>i.sku===v.sku) || {precioUnit:0, nombre:''};
-    const total = it.precioUnit*v.cantidad - (v.descuentoSocio||0) - (v.descuadre||0);
-    return {Fecha:v.fecha, Hora:v.hora, POS:v.pos, SKU:v.sku, Producto:it.nombre, Cantidad:v.cantidad, Metodo:v.metodoPago, DescSocio:v.descuentoSocio||0, Descuadre:v.descuadre||0, Total:total, Notas:v.notas||''};
-  });
-  const compras = state.compras.map(c=>{
-    const it = state.inventario.find(i=>i.sku===c.sku) || {nombre:''};
-    return {Fecha:c.fecha, SKU:c.sku, Producto:it.nombre, Cantidad:c.cant, PU:c.pu, Total:c.cant*c.pu, Notas:c.notas||''};
-  });
-  const gastos = state.gastos.map(g=>({Fecha:g.fecha, Tipo:g.tipo, Concepto:g.concepto, Valor:g.valor, Socio:g.socio||'', Notas:g.notas||''}));
-
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ventas), 'Ventas');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(compras), 'Compras');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(gastos), 'Gastos');
-  XLSX.writeFile(wb, `cierre_${today()}.xlsx`);
+  const toSheet = (rows, headersMap) => {
+    const arr = rows.map(x=>{
+      const obj={};
+      for(const [label, key] of headersMap) obj[label] = x[key] ?? "";
+      return obj;
+    });
+    return XLSX.utils.json_to_sheet(arr);
+  };
+  XLSX.utils.book_append_sheet(wb, toSheet(r.v||[], [["Fecha","fecha"],["Hora","hora"],["POS","pos"],["SKU","sku"],["Prod","prod"],["Cant","cant"],["Pago","metodo_pago"],["Monto","monto"],["Nota","nota"]]), "Ventas");
+  XLSX.utils.book_append_sheet(wb, toSheet(r.c||[], [["Fecha","fecha"],["SKU","sku"],["Prod","prod"],["Cant","cant"],["PU","pu"],["Total","total"],["POS","pos"],["Nota","nota"]]), "Compras");
+  XLSX.utils.book_append_sheet(wb, toSheet(r.g||[], [["Fecha","fecha"],["Tipo","tipo"],["Concepto","concepto"],["Valor","valor"],["Atribuido","atribuido"],["POS","pos"],["Notas","notas"]]), "Gastos");
+  XLSX.utils.book_append_sheet(wb, toSheet(r.n||[], [["Fecha","fecha"],["Empleado","empleado"],["Rol","rol"],["Valor","valor"],["Notas","notas"]]), "Nomina");
+  XLSX.writeFile(wb, `reporte_${d}_a_${h}.xlsx`);
 });
 
-document.getElementById('btnExportPDF').addEventListener('click', ()=>{
+$("#btnExportPDF").addEventListener("click", async ()=>{
+  const d = $("#h_desde").value || $("#fechaActiva").value;
+  const h = $("#h_hasta").value || $("#fechaActiva").value;
+  const r = await resumenRango(d,h,false);
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt', format:'a4'});
-  let y = 36; const x = 36;
-  doc.setFontSize(16); doc.text(`Resumen ${today()}`, x, y); y+=20;
-  // KPIs rápidos
-  const d = today();
-  const v = state.ventas.filter(x=>x.fecha===d);
-  let total=0, ef=0, tr=0;
-  v.forEach(o=>{ const it = state.inventario.find(i=>i.sku===o.sku)||{precioUnit:0}; const neto = it.precioUnit*o.cantidad - (o.descuentoSocio||0) - (o.descuadre||0); total+=neto; if(o.metodoPago==='Efectivo') ef+=neto; else tr+=neto; });
+  const doc = new jsPDF({unit:"pt"});
+  doc.setFontSize(14);
+  doc.text(`Reporte ${d} a ${h}`, 40, 40);
   doc.setFontSize(11);
-  doc.text(`Ventas: ${money(total)}  (Efectivo ${money(ef)} · Transf ${money(tr)})`, x, y); y+=16;
-  doc.save(`cierre_${today()}.pdf`);
+  const lines = [
+    `Ventas: ${fmt(r.totalVentas)}  (Efectivo: ${fmt(r.ef)} · Transf: ${fmt(r.tr)})`,
+    `Compras: ${fmt(r.compras)}   Gastos: ${fmt(r.gastos)}   Nómina: ${fmt(r.nomina)}`,
+    `Utilidad: ${fmt(r.utilidad)}`
+  ];
+  lines.forEach((t,i)=> doc.text(t, 40, 70 + i*18));
+  doc.save(`reporte_${d}_a_${h}.pdf`);
 });
 
-// ===== Reset =====
-document.getElementById('btnReset').addEventListener('click', ()=>{
-  if(confirm('¿Resetear datos?')){
-    localStorage.removeItem(LS);
-    Object.assign(state, seed());
-    saveState(); renderAll();
-  }
+// ----------------- RESET / FECHA -----------------
+$("#fechaActiva").addEventListener("change", async ()=>{
+  await Promise.all([refreshVentas(), refreshCompras(), refreshGastos(), refreshNomina(), loadKPIs()]);
+});
+$("#btnReset").addEventListener("click", async ()=>{
+  $("#fechaActiva").value = today();
+  goto("home");
+  await Promise.all([refreshVentas(), refreshCompras(), refreshGastos(), refreshNomina(), loadKPIs()]);
 });
 
-// ===== Render All =====
-function renderAll(){
-  // home
-  kpisHoy();
-  // mesero
-  buildProductoSelectPOS();
-  renderVentas();
-  // pos
-  rebuildCompraSelect();
-  renderCompras();
-  renderGastos();
-  // socios
-  renderSociosCfg();
-}
-
-renderAll();
-if (sb) { dbPullAll(); }
-goto('home');
-
-// ===== PWA SW =====
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('service-worker.js');
-  });
-}
+// ----------------- INIT -----------------
+(async function init(){
+  goto("home");
+  await loadCatalogo("Barra");
+  renderInvTable("#inv_body_inicial");
+  renderInvTable("#inv_body_final");
+  await Promise.all([refreshVentas(), refreshCompras(), refreshGastos(), refreshNomina(), loadSocios(), loadKPIs(), loadDeudas()]);
+})();
 </script>
 </body>
 </html>
